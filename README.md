@@ -54,6 +54,12 @@ use RedSnapper\Builder\BuilderClient;
         $client = app()->make(BuilderClient::class);
     }
 ```
+You can modify the client settings with the setter methods:
+```php
+  $client->setAuth('user', 'key');
+  $client->setSiteName('sitename');
+  $client->setPreview(true);
+```
 
 To make a GET request provide the Builder macro name and optionally provide parameters as a second argument.
 

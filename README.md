@@ -76,12 +76,6 @@ A `BuilderResponse` object will be returned which extends the `Illuminate\Http\C
 vendor/bin/phpunit
 ```
 
-or
-
-```bash
-composer test
-```
-
 ## Changelog
 
 Please see [CHANGELOG](CHANGELOG.MD) for more information on what has changed recently.

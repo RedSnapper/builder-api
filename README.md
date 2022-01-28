@@ -39,6 +39,12 @@ return [
 ];
 ```
 
+
+## Authorisation
+If you provide both a user and password then basic authentication will be attempted.
+
+Alternatively you can provide just a user - this will add an `X-USER` header to the request. This will only work if your application lives on the same network as the Builder instance
+
 ## Usage
 
 You can type-hint the `BuilderClient` class in your constructor methods or use `app()->make()`

@@ -2,8 +2,9 @@
 
 namespace RedSnapper\Builder;
 
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
-use RedSnapper\Builder\Exception\MissingBuilderAuthenticationException;
+use RedSnapper\Builder\Exception\MissingBuilderUsernameException;
 use RedSnapper\Builder\Exception\MissingSiteNameException;
 
 class BuilderClient
@@ -28,7 +29,7 @@ class BuilderClient
     public function __construct(
         ?string $siteName,
         ?string $user,
-        ?string $password,
+        ?string $password = null,
         ?bool $preview = false,
     ) {
         $this->siteName = $siteName;
@@ -39,7 +40,7 @@ class BuilderClient
 
     /**
      * @throws MissingSiteNameException
-     * @throws MissingBuilderAuthenticationException
+     * @throws MissingBuilderUsernameException
      */
     public function get(string $macro, array $params = []): BuilderResponse
     {
@@ -47,7 +48,9 @@ class BuilderClient
 
         $url = $this->buildRequestUrl($macro, $params);
 
-        $response = Http::withBasicAuth($this->user, $this->password)->get($url);
+        $response = $this->basicAuthRequired()
+            ? $this->basicAuthRequest($url)
+            : $this->userAuthRequest($url);
 
         return new BuilderResponse($response->toPsrResponse());
     }
@@ -70,7 +73,7 @@ class BuilderClient
 
     /**
      * @throws MissingSiteNameException
-     * @throws MissingBuilderAuthenticationException
+     * @throws MissingBuilderUsernameException
      */
     private function validateSettings()
     {
@@ -78,9 +81,24 @@ class BuilderClient
             throw new MissingSiteNameException();
         }
 
-        if (empty($this->user) || empty($this->password)) {
-            throw new MissingBuilderAuthenticationException();
+        if (empty($this->user)) {
+            throw new MissingBuilderUsernameException();
         }
+    }
+
+    private function basicAuthRequired(): bool
+    {
+        return !empty($this->password);
+    }
+
+    private function basicAuthRequest(string $url): Response
+    {
+        return Http::withBasicAuth($this->user, $this->password)->get($url);
+    }
+
+    private function userAuthRequest(string $url): Response
+    {
+        return Http::withHeaders(['X-USER' => $this->user])->get($url);
     }
 
     private function buildRequestUrl(string $macro, array $params): string

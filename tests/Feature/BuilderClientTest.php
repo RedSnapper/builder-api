@@ -6,7 +6,7 @@ use Illuminate\Http\Client\Request;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use RedSnapper\Builder\BuilderClient;
-use RedSnapper\Builder\Exception\MissingBuilderAuthenticationException;
+use RedSnapper\Builder\Exception\MissingBuilderUsernameException;
 use RedSnapper\Builder\Exception\MissingSiteNameException;
 use RedSnapper\Builder\Tests\Fixtures;
 use RedSnapper\Builder\Tests\TestCase;
@@ -24,7 +24,7 @@ class BuilderClientTest extends TestCase
     /** @test */
     public function if_auth_is_not_provided_exception_is_thrown()
     {
-        $this->expectException(MissingBuilderAuthenticationException::class);
+        $this->expectException(MissingBuilderUsernameException::class);
 
         $client = new BuilderClient('testsite', null, null);
         $client->get('apiPages');
@@ -33,18 +33,9 @@ class BuilderClientTest extends TestCase
     /** @test */
     public function if_user_is_not_provided_exception_is_thrown()
     {
-        $this->expectException(MissingBuilderAuthenticationException::class);
+        $this->expectException(MissingBuilderUsernameException::class);
 
         $client = new BuilderClient('testsite', null, '123');
-        $client->get('apiPages');
-    }
-
-    /** @test */
-    public function if_password_is_not_provided_exception_is_thrown()
-    {
-        $this->expectException(MissingBuilderAuthenticationException::class);
-
-        $client = new BuilderClient('testsite', 'test-user', null);
         $client->get('apiPages');
     }
 
@@ -122,5 +113,31 @@ class BuilderClientTest extends TestCase
         Http::assertSent(function (Request $request) use ($expectedUrl) {
             return $request->url() === $expectedUrl;
         });
+    }
+
+    /** @test */
+    public function can_make_request_with_username_only()
+    {
+        Http::fake();
+
+        $client = new BuilderClient('testsite', 'test-user');
+        $client->get('apiPages');
+
+        Http::assertSent(function (Request $request) {
+            return $request->hasHeader('X-USER', 'test-user')
+                && !$request->hasHeader('Authorization');
+        });
+    }
+
+    /** @test */
+    public function basic_auth_is_not_set_when_username_only_provided()
+    {
+        Http::fake();
+        Http::shouldReceive('withBasicAuth')->never();
+        Http::shouldReceive('withHeaders')->andReturnSelf()->once();
+        Http::shouldReceive('get')->once()->andReturn(new Response(new \GuzzleHttp\Psr7\Response()));
+
+        $client = new BuilderClient('testsite', 'test-user');
+        $client->get('apiPages');
     }
 }

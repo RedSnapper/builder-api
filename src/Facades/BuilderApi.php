@@ -8,7 +8,7 @@ use RedSnapper\Builder\PendingRequest;
 
 /**
  * @method static PendingRequest new()
- * @method static BuilderResponse get()
+ * @method static BuilderResponse get(string $macro, array $params = [])
  */
 class BuilderApi extends Facade
 {

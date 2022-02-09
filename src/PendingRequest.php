@@ -62,7 +62,7 @@ class PendingRequest
             ? $this->basicAuthRequest($url)
             : $this->userAuthRequest($url);
 
-        return new BuilderResponse($response->toPsrResponse());
+        return new BuilderResponse($response);
     }
 
     public function withAuth(string $user, string $password = null): static

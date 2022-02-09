@@ -33,7 +33,18 @@ class PendingRequestTest extends TestCase
     public function can_make_get_request()
     {
         Http::fake([
-            '*' => Http::response(Fixtures::successfulResponse()),
+            '*' => Http::response([
+                'result' => [
+                    'data' => [
+                        [
+                            'code' => 'UK 123',
+                        ],
+                        [
+                            'code' => 'UK 456',
+                        ],
+                    ],
+                ],
+            ]),
         ]);
 
         $pendingRequest = new PendingRequest(siteName: 'testsite', user: 'test-user', password: 'key-123');

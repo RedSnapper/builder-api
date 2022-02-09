@@ -3,40 +3,30 @@
 namespace RedSnapper\Builder\Tests\Feature;
 
 use Illuminate\Http\Client\Request;
-use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
-use RedSnapper\Builder\BuilderClient;
 use RedSnapper\Builder\Exception\MissingBuilderUsernameException;
 use RedSnapper\Builder\Exception\MissingSiteNameException;
+use RedSnapper\Builder\PendingRequest;
 use RedSnapper\Builder\Tests\Fixtures;
 use RedSnapper\Builder\Tests\TestCase;
 
-class BuilderClientTest extends TestCase
+class PendingRequestTest extends TestCase
 {
     /** @test */
     public function if_site_name_is_not_provided_exception_is_thrown()
     {
         $this->expectException(MissingSiteNameException::class);
-        $client = new BuilderClient(null, null, null);
-        $client->get('apiPages');
+        $pendingRequest = new PendingRequest(siteName: null, user: null, password: null);
+        $pendingRequest->get('apiPages');
     }
 
     /** @test */
-    public function if_auth_is_not_provided_exception_is_thrown()
+    public function if_username_is_not_provided_exception_is_thrown()
     {
         $this->expectException(MissingBuilderUsernameException::class);
 
-        $client = new BuilderClient('testsite', null, null);
-        $client->get('apiPages');
-    }
-
-    /** @test */
-    public function if_user_is_not_provided_exception_is_thrown()
-    {
-        $this->expectException(MissingBuilderUsernameException::class);
-
-        $client = new BuilderClient('testsite', null, '123');
-        $client->get('apiPages');
+        $pendingRequest = new PendingRequest(siteName: 'testsite', user: null, password: '123');
+        $pendingRequest->get('apiPages');
     }
 
     /** @test */
@@ -46,8 +36,8 @@ class BuilderClientTest extends TestCase
             '*' => Http::response(Fixtures::successfulResponse()),
         ]);
 
-        $client = new BuilderClient('testsite', 'test-user', 'key-123');
-        $response = $client->get('apiPages');
+        $pendingRequest = new PendingRequest(siteName: 'testsite', user: 'test-user', password: 'key-123');
+        $response = $pendingRequest->get('apiPages');
 
         $expectedUrl = 'https://testsite-edit.redsnapper.net/x/build.cgi?-E+-macro+apiPages';
         Http::assertSent(function (Request $request) use ($expectedUrl) {
@@ -60,23 +50,19 @@ class BuilderClientTest extends TestCase
     }
 
     /** @test */
-    public function basic_auth_is_set_correctly()
-    {
-        Http::fake();
-        Http::shouldReceive('withBasicAuth')->with('test-user', 'key-123')->once()->andReturnSelf();
-        Http::shouldReceive('get')->once()->andReturn(new Response(new \GuzzleHttp\Psr7\Response()));
-
-        $client = new BuilderClient('testsite', 'test-user', 'key-123');
-        $client->get('apiPages');
-    }
-
-    /** @test */
     public function can_make_get_request_with_preview_switch()
     {
         Http::fake();
 
-        $client = new BuilderClient('testsite', 'test-user', 'key-123', true);
-        $client->get('apiPages');
+        // setting 'published' to false will add the preview switch
+        $pendingRequest = new PendingRequest(
+            siteName: 'testsite',
+            user: 'test-user',
+            password: 'key-123',
+            published: false
+        );
+
+        $pendingRequest->get('apiPages');
 
         $expectedUrl = 'https://testsite-edit.redsnapper.net/x/build.cgi?-E+-P+-macro+apiPages';
 
@@ -90,8 +76,8 @@ class BuilderClientTest extends TestCase
     {
         Http::fake();
 
-        $client = new BuilderClient('testsite', 'test-user', 'key-123');
-        $client->get('apiPages', ['foo', 'bar']);
+        $pendingRequest = new PendingRequest(siteName: 'testsite', user: 'test-user', password: 'key-123');
+        $pendingRequest->get('apiPages', ['foo', 'bar']);
 
         $expectedUrl = 'https://testsite-edit.redsnapper.net/x/build.cgi?-E+-macro+apiPages+-parms+foo,bar';
 
@@ -105,8 +91,14 @@ class BuilderClientTest extends TestCase
     {
         Http::fake();
 
-        $client = new BuilderClient('testsite', 'test-user', 'key-123', true);
-        $client->get('apiPages', ['foo', 'bar']);
+        $pendingRequest = new PendingRequest(
+            siteName: 'testsite',
+            user: 'test-user',
+            password: 'key-123',
+            published: false
+        );
+
+        $pendingRequest->get('apiPages', ['foo', 'bar']);
 
         $expectedUrl = 'https://testsite-edit.redsnapper.net/x/build.cgi?-E+-P+-macro+apiPages+-parms+foo,bar';
 
@@ -120,8 +112,8 @@ class BuilderClientTest extends TestCase
     {
         Http::fake();
 
-        $client = new BuilderClient('testsite', 'test-user');
-        $client->get('apiPages');
+        $pendingRequest = new PendingRequest(siteName: 'testsite', user: 'test-user');
+        $pendingRequest->get('apiPages');
 
         Http::assertSent(function (Request $request) {
             return $request->hasHeader('X-USER', 'test-user')
@@ -130,14 +122,20 @@ class BuilderClientTest extends TestCase
     }
 
     /** @test */
-    public function basic_auth_is_not_set_when_username_only_provided()
+    public function can_use_fluent_setters_to_overwrite_constructor_config()
     {
         Http::fake();
-        Http::shouldReceive('withBasicAuth')->never();
-        Http::shouldReceive('withHeaders')->andReturnSelf()->once();
-        Http::shouldReceive('get')->once()->andReturn(new Response(new \GuzzleHttp\Psr7\Response()));
 
-        $client = new BuilderClient('testsite', 'test-user');
-        $client->get('apiPages');
+        $pendingRequest = new PendingRequest(siteName: 'testsite', user: 'test-user', password: null, published: true);
+        $pendingRequest->forSite('second-site')
+            ->withAuth('second-user')
+            ->unpublished()
+            ->get('apiPages');
+
+        $expectedUrl = 'https://second-site-edit.redsnapper.net/x/build.cgi?-E+-P+-macro+apiPages';
+
+        Http::assertSent(function (Request $request) use ($expectedUrl) {
+            return $request->url() === $expectedUrl && $request->hasHeader('X-USER', 'second-user');
+        });
     }
 }

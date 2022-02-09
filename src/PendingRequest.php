@@ -7,14 +7,25 @@ use Illuminate\Support\Facades\Http;
 use RedSnapper\Builder\Exception\MissingBuilderUsernameException;
 use RedSnapper\Builder\Exception\MissingSiteNameException;
 
-class BuilderClient
+class PendingRequest
 {
     /** @var string|null The name of the site in Builder */
     private ?string $siteName;
 
-    /** @var bool Whether the api should query the 'preview' version of the Builder site or not */
-    private bool $preview;
+    /**
+     * Whether the api should query the 'preview' version of the Builder site or not. if published is set to false, the
+     * preview flag will be added
+     *
+     * @var bool
+     */
+    private bool $published;
 
+    /**
+     * If only the user is provided, a normal request will be made with an 'X-USER' header added, if user and password
+     * are provided then a basic auth request will be made
+     *
+     * @var string|null
+     */
     private ?string $user;
     private ?string $password;
 
@@ -27,20 +38,19 @@ class BuilderClient
     private const PARAM_FORMAT = '+-parms+%s';
 
     public function __construct(
-        ?string $siteName,
-        ?string $user,
+        ?string $siteName = null,
+        ?string $user = null,
         ?string $password = null,
-        ?bool $preview = false,
+        ?bool $published = true,
     ) {
         $this->siteName = $siteName;
         $this->user = $user;
         $this->password = $password;
-        $this->preview = $preview;
+        $this->published = $published;
     }
 
     /**
-     * @throws MissingSiteNameException
-     * @throws MissingBuilderUsernameException
+     * @throws MissingBuilderUsernameException|MissingSiteNameException
      */
     public function get(string $macro, array $params = []): BuilderResponse
     {
@@ -55,20 +65,33 @@ class BuilderClient
         return new BuilderResponse($response->toPsrResponse());
     }
 
-    public function setAuth(string $user, string $password)
+    public function withAuth(string $user, string $password = null): static
     {
         $this->user = $user;
         $this->password = $password;
+
+        return $this;
     }
 
-    public function setSiteName(string $siteName)
+    public function forSite(string $siteName): static
     {
         $this->siteName = $siteName;
+
+        return $this;
     }
 
-    public function setPreview(bool $preview = true)
+    public function published(): static
     {
-        $this->preview = $preview;
+        $this->published = true;
+
+        return $this;
+    }
+
+    public function unpublished(): static
+    {
+        $this->published = false;
+
+        return $this;
     }
 
     /**
@@ -103,7 +126,7 @@ class BuilderClient
 
     private function buildRequestUrl(string $macro, array $params): string
     {
-        $url = ($this->preview ? self::PREVIEW_SWITCH : '');
+        $url = ($this->published ? '' : self::PREVIEW_SWITCH);
         $url .= sprintf(self::MACRO_FORMAT, $macro);
         $url .= $this->buildParamsString($params);
 

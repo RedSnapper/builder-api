@@ -50,14 +50,14 @@ Alternatively you can provide just a user - this will add an `X-USER` header to 
 You can type-hint the `BuilderClient` class in your constructor methods or use `app()->make()`
 
 ```php
-use RedSnapper\Builder\BuilderClient;
+use RedSnapper\Builder\BuilderRequestFactory;
 
-    public function __construct(BuilderClient $client)
+    public function __construct(BuilderRequestFactory $client)
     {
         $this->client = $client;
         
         # or...
-        $client = app()->make(BuilderClient::class);
+        $client = app()->make(BuilderRequestFactory::class);
     }
 ```
 You can modify the client settings with the setter methods:

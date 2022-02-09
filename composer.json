@@ -31,7 +31,10 @@
     "laravel": {
       "providers": [
         "RedSnapper\\Builder\\BuilderApiServiceProvider"
-      ]
+      ],
+      "aliases": {
+        "BuilderApi": "RedSnapper\\Builder\\Facades\\BuilderApi"
+      }
     }
   }
 }

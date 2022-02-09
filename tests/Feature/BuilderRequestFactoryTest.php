@@ -12,7 +12,7 @@ use RedSnapper\Builder\Tests\TestCase;
 class BuilderRequestFactoryTest extends TestCase
 {
     /** @test */
-    public function can_make_a_new_pending_request()
+    public function can_get_a_new_pending_request()
     {
         $factory = new BuilderRequestFactory();
         $pendingRequest = $factory->new();
@@ -37,10 +37,26 @@ class BuilderRequestFactoryTest extends TestCase
     }
 
     /** @test */
-    public function can_use_facade_to_make_request()
+    public function can_use_facade_to_get_pending_request()
     {
         $pendingRequest = BuilderApi::new();
 
         $this->assertInstanceOf(PendingRequest::class, $pendingRequest);
+    }
+
+    /** @test */
+    public function can_use_facade_to_make_a_request_directly()
+    {
+        Http::fake();
+
+        config()->set('builder-api.site', 'test-site');
+        config()->set('builder-api.user', 'test-user');
+
+        BuilderApi::get('apiPages');
+
+        $expectedUrl = 'https://test-site-edit.redsnapper.net/x/build.cgi?-E+-macro+apiPages';
+        Http::assertSent(function (Request $request) use ($expectedUrl) {
+            return $request->url() === $expectedUrl;
+        });
     }
 }

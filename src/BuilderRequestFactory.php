@@ -43,6 +43,16 @@ class BuilderRequestFactory
      */
     public function new(): PendingRequest
     {
+        return $this->newPendingRequest();
+    }
+
+    public function __call($method, $parameters)
+    {
+        return $this->newPendingRequest()->{$method}(...$parameters);
+    }
+
+    private function newPendingRequest(): PendingRequest
+    {
         return new PendingRequest(
             $this->siteName,
             $this->user,

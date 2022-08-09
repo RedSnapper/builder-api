@@ -29,6 +29,8 @@ class PendingRequest
     private ?string $user;
     private ?string $password;
 
+    private $middleware = null;
+
     /**
      * The format of Builder's API url and its parts
      */
@@ -94,6 +96,14 @@ class PendingRequest
         return $this;
     }
 
+
+    public function withMiddleware(callable $middleware): static
+    {
+        $this->middleware = $middleware;
+
+        return $this;
+    }
+
     /**
      * @throws MissingSiteNameException
      * @throws MissingBuilderUsernameException
@@ -116,12 +126,22 @@ class PendingRequest
 
     private function basicAuthRequest(string $url): Response
     {
-        return Http::withBasicAuth($this->user, $this->password)->get($url);
+        $pendingRequest = Http::withBasicAuth($this->user, $this->password);
+        if ($this->middleware) {
+            $pendingRequest->withMiddleware($this->middleware);
+        }
+
+        return $pendingRequest->get($url);
     }
 
     private function userAuthRequest(string $url): Response
     {
-        return Http::withHeaders(['X-USER' => $this->user])->get($url);
+        $pendingRequest = Http::withHeaders(['X-USER' => $this->user]);
+        if ($this->middleware) {
+            $pendingRequest->withMiddleware($this->middleware);
+        }
+
+        return $pendingRequest->get($url);
     }
 
     private function buildRequestUrl(string $macro, array $params): string

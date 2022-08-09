@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Http;
 use RedSnapper\Builder\Exception\MissingBuilderUsernameException;
 use RedSnapper\Builder\Exception\MissingSiteNameException;
 use RedSnapper\Builder\PendingRequest;
-use RedSnapper\Builder\Tests\Fixtures;
 use RedSnapper\Builder\Tests\TestCase;
 
 class PendingRequestTest extends TestCase

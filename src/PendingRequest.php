@@ -146,9 +146,9 @@ class PendingRequest
 
     private function buildRequestUrl(string $macro, array $params): string
     {
-        $url = ($this->published ? '' : self::PREVIEW_SWITCH);
-        $url .= sprintf(self::MACRO_FORMAT, $macro);
+        $url = sprintf(self::MACRO_FORMAT, $macro);
         $url .= $this->buildParamsString($params);
+        $url .= ($this->published ? '' : self::PREVIEW_SWITCH);
 
         return sprintf(self::REQUEST_URL_FORMAT, $this->siteName, $url);
     }

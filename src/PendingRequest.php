@@ -37,7 +37,7 @@ class PendingRequest
     private const REQUEST_URL_FORMAT = 'https://%s-edit.redsnapper.net/x/build.cgi?-E+%s';
     private const PREVIEW_SWITCH = '-P+';
     private const MACRO_FORMAT = '-macro+%s';
-    private const PARAM_FORMAT = '+-parms+%s';
+    private const PARAM_FORMAT = '+-parms+%s+-lpt';
 
     public function __construct(
         ?string $siteName = null,

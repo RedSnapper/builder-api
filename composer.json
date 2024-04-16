@@ -23,8 +23,8 @@
     "php": "^8.0"
   },
   "require-dev": {
-    "orchestra/testbench": "^6.24",
-    "phpunit/phpunit": "^9.5",
+    "orchestra/testbench": "^8.0",
+    "phpunit/phpunit": "^10",
     "guzzlehttp/guzzle": "^7.4"
   },
   "extra": {

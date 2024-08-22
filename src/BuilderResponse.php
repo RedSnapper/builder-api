@@ -17,7 +17,7 @@ class BuilderResponse
 
     public function data(): array
     {
-        return $this->response->json('result.data', []);
+        return $this->response->json('result.data', []) ?? [];
     }
 
     public function errorMsg(): ?string

@@ -67,7 +67,7 @@ class PendingRequest
         return new BuilderResponse($response);
     }
 
-    public function withAuth(string $user, string $password = null): static
+    public function withAuth(string $user, ?string $password = null): static
     {
         $this->user = $user;
         $this->password = $password;
